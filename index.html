@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leaf It Off</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2f2f2f; --muted:#8c8c8c; --ground:#3d5f3a; --block:#f4e7d4;
+    --red:#d9483b; --sky:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:Poppins,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--sky)}
+  .page{min-height:100vh;position:relative;overflow:hidden;display:flex;flex-direction:column}
+  [hidden]{display:none!important}
+  .ico{width:1.15em;height:1.15em;vertical-align:-.22em;display:inline-block;overflow:visible}
+
+  /* ---- clouds: drift slowly from side to side, forever ---- */
+  .cloud{position:absolute;z-index:0;pointer-events:none;width:clamp(80px,14vw,140px);
+         animation:cross var(--t) ease-in-out infinite alternate}
+  .cloud.l{left:1%;top:84px;--dx:min(10vw,140px);--t:26s}
+  .cloud.r{right:1%;top:40px;--dx:calc(-1 * min(10vw,140px));--t:32s;animation-delay:-11s}
+  .cloud.s{right:3%;top:215px;width:clamp(48px,7vw,78px);--dx:calc(-1 * min(12vw,170px));--t:38s;animation-delay:-20s;opacity:.85}
+  @keyframes cross{from{transform:translateX(0)}to{transform:translateX(var(--dx))}}
+  .title,.sub,.sub2,.stage,.kicker,.room-title,.stats,.scene{position:relative;z-index:1}
+
+  /* ---- plant idle animation: sway, little hop, blink ---- */
+  .plant .sway{transform-box:view-box;transform-origin:60px 92px;animation:sway var(--dur,2.6s) ease-in-out infinite alternate}
+  @keyframes sway{from{transform:rotate(calc(-1 * var(--a,4deg)))}to{transform:rotate(var(--a,4deg))}}
+  .plant .hop{transform-box:view-box;transform-origin:60px 150px;animation:hop 3.4s ease-in-out infinite}
+  @keyframes hop{0%,76%,100%{transform:none}82%{transform:scale(1.05,.93)}88%{transform:translateY(-6px) scale(.97,1.05)}94%{transform:scale(1.02,.98)}}
+  .plant{overflow:visible}
+  .plant .eye{transform-box:fill-box;transform-origin:center;animation:blink 4.2s infinite}
+  @keyframes blink{0%,92%,100%{transform:none}95%{transform:scaleY(.08)}}
+  .plant .look{animation:look 6s ease-in-out infinite alternate}
+  @keyframes look{0%,30%{transform:translate(-1.3px,0)}70%,100%{transform:translate(1.3px,.4px)}}
+
+  /* ===== GARDEN ===== */
+  .title{text-align:center;font-weight:800;font-size:clamp(42px,8.5vw,88px);margin:38px 0 0;letter-spacing:-1px;line-height:1}
+  .sub{text-align:center;color:#4a4a4a;font-weight:700;margin:14px 0 0;font-size:clamp(16px,2.5vw,24px)}
+  .sub2{text-align:center;color:var(--muted);font-weight:600;margin:4px 0 0;font-size:clamp(12px,1.5vw,15px)}
+  .stage{flex:1;display:flex;justify-content:center;align-items:flex-end;gap:clamp(2px,2vw,26px);padding:14px 8px 0}
+  .slot{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;font:inherit;color:inherit;
+        transition:opacity .45s, transform .6s cubic-bezier(.3,1.6,.5,1)}
+  .slot .plant{width:clamp(70px,12.5vw,138px);display:block;transition:transform .2s}
+  .slot:hover .plant,.slot:focus-visible .plant{transform:translateY(-6px) rotate(-3deg)}
+  .slot.side{margin:0 clamp(0px,2vw,24px)}
+  .slot.hide{opacity:0;transform:translateY(70px) scale(.55)}
+  .tag{font-weight:700;font-size:clamp(11px,1.6vw,16px);white-space:nowrap;line-height:1.2}
+  .kwh{font-size:clamp(10px,1.3vw,13px);color:var(--muted);font-weight:600;margin-bottom:6px}
+  .live-pill{display:inline-block;font-size:10px;background:#7cc36b;color:#fff;border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:middle;font-weight:800}
+  .block{width:clamp(78px,14vw,150px);background:var(--block);border:3px solid var(--ink);border-bottom:0;border-radius:10px 10px 0 0;
+         display:flex;justify-content:center;padding-top:6px;font-weight:800;font-size:clamp(22px,4vw,42px)}
+  .b1{height:clamp(80px,13vw,140px)} .b2{height:clamp(56px,9vw,100px)} .b3{height:clamp(38px,6vw,68px)}
+  .crown{display:block;font-size:clamp(26px,3.6vw,40px);line-height:1;animation:bob 1s ease-in-out infinite alternate}
+  @keyframes bob{to{transform:translateY(-5px) rotate(-7deg)}}
+  .winner .plant{animation:jump .55s ease-in-out 4}
+  @keyframes jump{50%{transform:translateY(-20px) rotate(4deg)}}
+  .ground{background:var(--ground);height:clamp(70px,13vh,130px);color:#fff;display:flex;justify-content:center;align-items:center;gap:8px;font-weight:600}
+
+  .announce{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%) scale(.6);opacity:0;background:#fff;border:3px solid var(--ink);border-radius:20px;
+            padding:14px 28px;font-weight:800;font-size:clamp(22px,4vw,42px);z-index:20;box-shadow:5px 5px 0 var(--ink);
+            transition:opacity .3s, transform .45s cubic-bezier(.3,1.6,.5,1);pointer-events:none;white-space:nowrap}
+  .announce.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  .announce.low{top:auto;bottom:clamp(10px,4vh,40px);transform:translate(-50%,0) scale(.6)}
+  .announce.low.show{transform:translate(-50%,0) scale(1)}
+  .announce .ico{width:1.2em;height:1.2em;margin-right:.25em}
+  .shake{animation:shake .25s infinite}
+  @keyframes shake{25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+  #confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:15}
+
+  /* ===== ROOM PAGE ===== */
+  #room{min-height:auto}
+  .back{position:absolute;top:18px;left:20px;font-weight:700;text-decoration:none;color:var(--ink);font-size:15px;z-index:2}
+  .back:hover{text-decoration:underline}
+  .kicker{text-align:center;font-weight:700;font-size:clamp(20px,3vw,28px);margin-top:46px}
+  .room-title{text-align:center;font-weight:800;font-size:clamp(42px,8.5vw,80px);margin:0;line-height:1.05;letter-spacing:-1px}
+  .stats{display:flex;justify-content:center;gap:clamp(18px,7vw,90px);margin-top:34px;text-align:center;padding:0 12px}
+  .stats .n{font-weight:800;font-size:clamp(30px,6vw,54px);line-height:1}
+  .stats .u{font-weight:700;font-size:clamp(12px,1.8vw,17px)}
+  .scene{display:grid;grid-template-columns:1fr 1fr;align-items:end;width:100%;max-width:860px;margin:90px auto 0;padding:0 20px}
+  .plant-box{position:relative;justify-self:center}
+  .plant-box .plant{width:clamp(120px,21vw,190px);display:block}
+  .bubble{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-30%);background:#fff;border:2.5px solid var(--ink);
+          border-radius:16px;padding:6px 12px;font-weight:700;font-size:clamp(11px,1.5vw,14px);white-space:nowrap}
+  .bubble::after{content:"";position:absolute;left:24%;bottom:-9px;width:12px;height:12px;background:#fff;border-right:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink);transform:rotate(45deg)}
+  .status{display:flex;flex-direction:column;gap:4px;padding-bottom:clamp(14px,4vh,40px)}
+  .srow{display:flex;align-items:center;gap:12px}
+  .srow .ico{width:clamp(30px,4.4vw,46px);height:clamp(30px,4.4vw,46px);flex:none;vertical-align:0}
+  .status .note{margin-left:calc(clamp(30px,4.4vw,46px) + 12px)}
+  .bulb{width:clamp(26px,4vw,40px);flex:none;margin-top:4px}
+  .bulb.shake{animation:shake .4s infinite}
+  .line{font-weight:700;font-size:clamp(22px,4vw,36px);line-height:1.18}
+  .line.bad{color:var(--red)}
+  .note{font-weight:600;font-size:clamp(12px,1.6vw,15px);color:var(--muted);margin-top:6px}
+  .note.bad{color:var(--red)}
+
+  .room-ground{background:var(--ground);color:#fff;min-height:75vh;padding:18px 20px 70px}
+  .hint{text-align:center;opacity:.75;font-weight:600;font-size:14px}
+  .act{max-width:660px;margin:34px auto 0}
+  .act h3{font-weight:800;font-size:clamp(22px,3.5vw,30px);margin:0 0 10px}
+  #log{list-style:none;margin:0;padding:0}
+  #log li{display:flex;gap:14px;align-items:center;padding:12px 0;border-bottom:2px dashed rgba(255,255,255,.22);font-weight:600}
+  #log .t{opacity:.7;min-width:96px;font-variant-numeric:tabular-nums}
+  #log .ico{width:26px;height:26px;flex:none}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:28px}
+  .controls button{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);color:#fff;border:2px solid rgba(255,255,255,.35);border-radius:12px;padding:7px 14px;font:inherit;font-weight:700;cursor:pointer}
+  .controls button:hover{background:rgba(255,255,255,.25)}
+  .controls small{opacity:.7}
+  .room-ground .ico > g, .ground .ico > g{stroke:#fff}
+
+  .badge{position:fixed;right:14px;bottom:14px;z-index:5;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:700;background:#eee;color:#666;border:2px solid #ddd}
+  .badge.live{background:#e5f6df;color:#2f7a22;border-color:#bfe5b3}
+  .badge.demo{background:#fff4d6;color:#9a6a00;border-color:#f3dc9a}
+  .badge.off{background:#fde4e1;color:var(--red);border-color:#f6b9b1}
+</style>
+</head>
+<body>
+
+<!-- shared doodle filter: makes clean SVG lines look hand-drawn -->
+<svg width="0" height="0" style="position:absolute">
+  <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+  <symbol id="cloud" viewBox="0 0 110 70">
+    <path filter="url(#rough)" d="M20 60 C 5 60, 4 40, 22 38 C 21 20, 47 15, 55 30 C 62 13, 93 17, 90 38 C 108 37, 109 60, 92 60 Z"
+          fill="#a9cdee" stroke="#86b6e2" stroke-width="2.5"/>
+  </symbol>
+</svg>
+
+<!-- ===== GARDEN PAGE ===== -->
+<section id="garden" class="page">
+  <svg class="cloud l" viewBox="0 0 110 70"><use href="#cloud"/></svg>
+  <svg class="cloud r" viewBox="0 0 110 70"><use href="#cloud"/></svg>
+  <svg class="cloud s" viewBox="0 0 110 70"><use href="#cloud"/></svg>
+  <h1 class="title">Leaf It Off</h1>
+  <p class="sub">waste less energy to have the happiest plant!</p>
+  <p class="sub2">tap a plant to visit the room</p>
+  <div class="stage" id="stage"></div>
+  <div class="ground" id="groundLabel">this week's garden</div>
+</section>
+
+<!-- ===== ROOM PAGE ===== -->
+<section id="room" class="page" hidden>
+  <a class="back" href="#" onclick="sfx.back()">← garden</a>
+  <svg class="cloud l" viewBox="0 0 110 70"><use href="#cloud"/></svg>
+  <svg class="cloud r" viewBox="0 0 110 70"><use href="#cloud"/></svg>
+  <svg class="cloud s" viewBox="0 0 110 70"><use href="#cloud"/></svg>
+  <div class="kicker">Leaf it Off</div>
+  <h1 class="room-title" id="rName">Our Room</h1>
+  <div class="stats">
+    <div><div class="n" id="sKwh">0.00</div><div class="u">kWh wasted</div></div>
+    <div><div class="n" id="sCost">$0.00</div><div class="u">money wasted</div></div>
+    <div><div class="n" id="sCo2">0.00</div><div class="u">kg CO2</div></div>
+  </div>
+  <div class="scene">
+    <div class="plant-box"><div class="bubble" id="bubble">hi!</div><div id="roomPlant"></div></div>
+    <div class="status">
+      <div class="srow"><span id="iLights"></span><div class="line" id="lLights">lights on</div></div>
+      <div class="srow"><span id="iMotion"></span><div class="line" id="lMotion">no motion</div></div>
+      <div class="srow"><span id="iPower"></span><div class="line" id="lPower">power on</div></div>
+      <div class="note" id="lNote"></div>
+    </div>
+  </div>
+</section>
+<section id="roomGround" class="room-ground" hidden>
+  <div class="hint">scroll down for activity ↓</div>
+  <div class="act">
+    <h3>happening in your room</h3>
+    <ul id="log"></ul>
+    <div class="controls" id="demoControls"></div>
+  </div>
+</section>
+
+<span id="modeBadge" class="badge">connecting…</span>
+<div class="announce" id="announce"></div>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ========= Settings ========= */
+const CFG = {
+  LIVE_NAME:  "Omra & Raisa",  // the real room with sensors
+  WATTS:      60,      // assumed power of the room lights (W)
+  PRICE:      0.14,    // $ per kWh
+  CO2:        0.39,    // kg CO2 per kWh
+  IDLE_LIMIT: 10,      // s of lights-on + empty before waste (demo; real ≈ 300)
+  CUT_AFTER:  5,       // s of buzzer before the relay cuts power
+  SPEED:      600,     // demo speed-up so kWh visibly moves
+  POLL_MS:    1000,
+  API:        "/api/state"
+};
+let SAMPLE_ROOMS = [
+  { name: "Maya & Jo",   kwh: 0.60 },
+  { name: "Sam & Lee",   kwh: 1.20 },
+  { name: "Ana & Priya", kwh: 2.90 },
+  { name: "Ben & Theo",  kwh: 3.60 },
+];
+const SAMPLE_LOG = [
+  { time: "2:41 PM",  kind: "lights_off", msg: "Lights turned off" },
+  { time: "1:05 PM",  kind: "motion",     msg: "Motion detected" },
+  { time: "11:20 AM", kind: "lights_on",  msg: "Lights turned on" },
+];
+
+/* ========= Doodle icons (replace all emojis) ========= */
+const INK = "#3a2e28";
+const BULB = f => `<path d="M16 4 C9 4 7 11 10 16 C12 19 12.5 20.5 12.5 23 H19.5 C19.5 20.5 20 19 22 16 C25 11 23 4 16 4 Z" fill="${f}"/><path d="M12.5 26 H19.5 M14 29 H18"/>`;
+const PLUG = `<path d="M10 9 H22 V17 C22 21 19 23 16 23 C13 23 10 21 10 17 Z" fill="#a9cdee"/><path d="M13 9 V4 M19 9 V4 M16 23 V26 C16 29 21 29 24 29" fill="none"/>`;
+const ICONS = {
+  crown:  `<path d="M5 24 L7 10 L12.5 16.5 L16 7 L19.5 16.5 L25 10 L27 24 Z" fill="#ffd65a"/><path d="M5 24 H27 V28 H5 Z" fill="#f5b942"/><circle cx="16" cy="6" r="2" fill="#f7b6c8"/>`,
+  trophy: `<path d="M9 8 C3 8 4 16 10 15 M23 8 C29 8 28 16 22 15" fill="none"/><path d="M9 5 H23 V12 C23 17.5 19.5 21 16 21 C12.5 21 9 17.5 9 12 Z" fill="#ffd65a"/><path d="M14 21 H18 V25 H14 Z" fill="#f5b942"/><path d="M10 25 H22 V29 H10 Z" fill="#c99a7c"/>`,
+  drum:   `<path d="M9 3 L15 10 M23 3 L17 10"/><path d="M5 12 V23 C5 27 27 27 27 23 V12" fill="#f7b6c8"/><ellipse cx="16" cy="12" rx="11" ry="4" fill="#fff"/><path d="M8 16 L12 23 L16 16 L20 23 L24 16" fill="none"/>`,
+  sprout: `<path d="M16 29 V15" fill="none"/><path d="M16 16 C 12 9, 5 10, 4 15 C 8 19, 13 19, 16 16 Z" fill="#a9d08e"/><path d="M16 14 C 20 7, 27 8, 28 13 C 24 17, 19 17, 16 14 Z" fill="#a9d08e"/>`,
+  heart:  `<path d="M16 27 C 4 19, 3 11, 9 8 C 13 6, 16 10, 16 11 C 16 10, 19 6, 23 8 C 29 11, 28 19, 16 27 Z" fill="#f2a7a0"/>`,
+  warn:   `<path d="M16 4 L29 27 H3 Z" fill="#ffd65a"/><path d="M16 12 V19"/><circle cx="16" cy="23" r="1.4" fill="${INK}"/>`,
+  lights_on:  BULB("#ffe48a") + `<path d="M16 0 V1 M4 6 L5.5 7.5 M28 6 L26.5 7.5" stroke="#f5b942"/>`,
+  lights_off: BULB("#e4e4e4"),
+  still:  `<circle cx="16" cy="6" r="3.2" fill="#e4e4e4"/><path d="M16 10 V20 M16 20 L12 29 M16 20 L20 29 M16 13 L11 18 M16 13 L21 18" fill="none" stroke-dasharray="2.5 3"/><path d="M23 6 L27 6 L23 11 L27 11" fill="none" stroke="#86b6e2"/>`,
+  motion: `<circle cx="17" cy="6" r="3.2" fill="#f7b6c8"/><path d="M16 10 L13 19 L18 23 L18 29 M13 19 L8 27 M14 13 L9 16 M15 13 L21 16" fill="none"/><path d="M23 9 H29 M24 14 H30 M23 19 H28" stroke="#86b6e2"/>`,
+  power_on: PLUG,
+  cut:    PLUG + `<path d="M4 28 L28 4" stroke="#d9483b" stroke-width="3"/>`,
+  reset:  `<path d="M25 16 A9 9 0 1 1 21.5 8.8" fill="none"/><path d="M23 3 L22 9.5 L15.5 9" fill="none"/>`,
+  swap:   `<path d="M5 11 H26 M21 6 L26 11 L21 16 M27 21 H6 M11 16 L6 21 L11 26" fill="none"/>`,
+};
+const icon = (name, cls = "") => `<svg class="ico ${cls}" viewBox="0 0 32 32" aria-hidden="true"><g filter="url(#rough)" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ICONS.sprout}</g></svg>`;
+const noEmoji = t => String(t).replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{2702}\u{21BA}]/gu, "").trim();
+function guessKind(msg){
+  const m = msg.toLowerCase();
+  if (/buzzer|warn|empty room/.test(m)) return "warn";
+  if (/relay|cut/.test(m)) return "cut";
+  if (/restored|came back/.test(m)) return "power_on";
+  if (/motion/.test(m)) return "motion";
+  if (/reset/.test(m)) return "reset";
+  if (/off/.test(m)) return "lights_off";
+  return "lights_on";
+}
+
+/* ========= Sound effects (generated in the browser, no files needed) ========= */
+let AC = null, NB = null;
+function ac(){
+  if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+  if (AC.state === "suspended") AC.resume();
+  return AC;
+}
+function tone(freq, dur, { type = "sine", vol = .2, when = 0, slide = 0 } = {}){
+  if (sfx.muted) return;
+  const c = ac(), t = c.currentTime + when, o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(freq * slide, t + dur);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + .03);
+}
+function noiseSrc(c){
+  if (!NB){ NB = c.createBuffer(1, c.sampleRate * 2, c.sampleRate); const d = NB.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  const s = c.createBufferSource(); s.buffer = NB; s.loop = true; return s;
+}
+function noise(dur, { vol = .1, when = 0, freq = 1000, q = 1, sweep = 0, attack = .01 } = {}){
+  if (sfx.muted) return;
+  const c = ac(), t = c.currentTime + when;
+  const s = noiseSrc(c), f = c.createBiquadFilter(), g = c.createGain();
+  f.type = "bandpass"; f.Q.value = q; f.frequency.setValueAtTime(freq, t);
+  if (sweep) f.frequency.exponentialRampToValueAtTime(freq * sweep, t + dur);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  s.connect(f).connect(g).connect(c.destination); s.start(t); s.stop(t + dur + .05);
+}
+const sfx = {
+  muted: false,
+  click(){ tone(700, .07, { type:"triangle", vol:.14, slide:1.6 }); },
+  back(){ tone(620, .1, { type:"triangle", vol:.12, slide:.6 }); },
+  pop(p = 1){ tone(260 * p, .15, { vol:.28, slide:2.6 }); tone(520 * p, .08, { type:"triangle", vol:.06, when:.03, slide:1.8 }); },
+  whoosh(){ noise(.6, { vol:.12, freq:500, q:.7, sweep:4, attack:.2 }); },
+  drumroll(d = 1.5){
+    if (sfx.muted) return;
+    const c = ac(), t = c.currentTime;
+    // snare roll: noise chopped by a fast, speeding-up pulse, getting louder
+    const sn = noiseSrc(c), bp = c.createBiquadFilter(), chop = c.createGain(), env = c.createGain();
+    const lfo = c.createOscillator(), depth = c.createGain();
+    bp.type = "bandpass"; bp.frequency.value = 2300; bp.Q.value = .7;
+    lfo.type = "square"; lfo.frequency.setValueAtTime(13, t); lfo.frequency.linearRampToValueAtTime(24, t + d);
+    chop.gain.value = .5; depth.gain.value = .5; lfo.connect(depth).connect(chop.gain);
+    env.gain.setValueAtTime(.0001, t); env.gain.exponentialRampToValueAtTime(.12, t + .12);
+    env.gain.linearRampToValueAtTime(.42, t + d); env.gain.exponentialRampToValueAtTime(.0001, t + d + .12);
+    sn.connect(bp).connect(chop).connect(env).connect(c.destination);
+    // low rumble underneath (the "background" of the roll)
+    const rb = noiseSrc(c), lp = c.createBiquadFilter(), e2 = c.createGain();
+    lp.type = "lowpass"; lp.frequency.value = 160;
+    e2.gain.setValueAtTime(.0001, t); e2.gain.exponentialRampToValueAtTime(.7, t + d); e2.gain.exponentialRampToValueAtTime(.0001, t + d + .2);
+    rb.connect(lp).connect(e2).connect(c.destination);
+    [sn, rb, lfo].forEach(n => { n.start(t); n.stop(t + d + .3); });
+  },
+  cymbal(){ noise(1.4, { vol:.15, freq:7000, q:.4 }); tone(55, .5, { vol:.35, slide:.6 }); },
+  fanfare(){
+    [523.25, 659.25, 783.99].forEach((f, i) => tone(f, .18, { type:"square", vol:.05, when:i * .11 }));
+    [523.25, 659.25, 783.99, 1046.5].forEach(f => tone(f, 1, { type:"triangle", vol:.07, when:.36 }));
+  },
+  sparkle(){ for (let i = 0; i < 16; i++) tone(900 + Math.random() * 1500, .07, { vol:.05, when:.15 + Math.random() * 1.6, slide:1.5 }); },
+  lightOn(){ tone(880, .1, { vol:.15 }); tone(1320, .14, { vol:.1, when:.06 }); },
+  lightOff(){ tone(660, .1, { vol:.13 }); tone(440, .16, { vol:.1, when:.06 }); },
+  chime(){ [784, 988, 1175].forEach((f, i) => tone(f, .3, { vol:.1, when:i * .08 })); },
+  alert(){ [0, .22, .44].forEach(w => tone(740, .14, { type:"square", vol:.05, when:w })); },
+  powerDown(){ tone(500, .7, { type:"sawtooth", vol:.06, slide:.22 }); },
+};
+
+/* ========= Calm background music (soft chords + the odd bird chirp) =========
+   B = music on/off · S = all sound on/off */
+const music = {
+  on: true, started: false, out: null, bus: null, i: 0,
+  chords: [[261.63,329.63,392.00,493.88], [220.00,261.63,329.63,392.00], [174.61,220.00,261.63,329.63], [196.00,246.94,293.66,392.00]],
+  start(){
+    if (this.started || !this.on || sfx.muted) return;
+    const c = ac(); this.started = true;
+    this.out = c.createGain(); this.out.gain.setValueAtTime(.0001, c.currentTime); this.out.gain.exponentialRampToValueAtTime(1, c.currentTime + 4);
+    this.bus = c.createGain();
+    const lp = c.createBiquadFilter(), dl = c.createDelay(), fb = c.createGain();
+    lp.type = "lowpass"; lp.frequency.value = 1700; dl.delayTime.value = .38; fb.gain.value = .35;
+    this.bus.connect(lp); lp.connect(this.out); lp.connect(dl); dl.connect(fb).connect(dl); dl.connect(this.out);
+    this.out.connect(c.destination);
+    this.chord(); setInterval(() => this.chord(), 5600); this.bird();
+  },
+  note(f, t, len, vol, type = "sine"){
+    const c = AC, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = f; o.detune.value = (Math.random() - .5) * 10;
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(1.8, len / 3)); g.gain.exponentialRampToValueAtTime(.0001, t + len);
+    o.connect(g).connect(this.bus); o.start(t); o.stop(t + len + .05);
+  },
+  chord(){
+    const t = AC.currentTime + .05, ch = this.chords[this.i++ % 4];
+    ch.forEach(f => this.note(f, t, 7, .018));
+    this.note(ch[0] / 2, t, 6.5, .03, "triangle");
+    for (let k = 0; k < 2; k++) if (Math.random() < .65)
+      this.note(ch[(Math.random() * 4) | 0] * 2, t + 1 + Math.random() * 3.5, 1.4, .02, "triangle");
+  },
+  bird(){
+    setTimeout(() => {
+      if (this.started){
+        const t = AC.currentTime, n = 2 + ((Math.random() * 3) | 0), base = 2300 + Math.random() * 900;
+        for (let k = 0; k < n; k++){
+          const o = AC.createOscillator(), g = AC.createGain(), s = t + k * .14;
+          o.frequency.setValueAtTime(base, s); o.frequency.exponentialRampToValueAtTime(base * 1.35, s + .08);
+          g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(.012, s + .02); g.gain.exponentialRampToValueAtTime(.0001, s + .1);
+          o.connect(g).connect(this.out); o.start(s); o.stop(s + .12);
+        }
+      }
+      this.bird();
+    }, 7000 + Math.random() * 9000);
+  },
+  level(v, sec = .4){ if (this.out) this.out.gain.setTargetAtTime(Math.max(v, .0001), AC.currentTime, sec); },
+  toggle(){ this.on = !this.on; if (this.on){ this.start(); this.level(1); } else this.level(0); }
+};
+function unlockSound(){ ac(); music.start(); }
+
+/* ========= State ========= */
+let S = freshState(), health = 100, mode = null, pollTimer = null, demoTimer = null, everConnected = false;
+function freshState(){ return { lights:false, motion:false, idle:0, warning:false, relayCut:false, kwh:1.40, log:[], leaderboard:null }; }
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const fmt = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+const rnd = (a, b) => (a + Math.random() * (b - a)).toFixed(2);
+
+function rooms(){
+  const others = (S.leaderboard || SAMPLE_ROOMS).map((r,i) => ({ id:"r"+i, name:r.name, kwh:r.kwh }));
+  return [{ id:"live", name:CFG.LIVE_NAME, kwh:S.kwh, live:true }, ...others];
+}
+const healthFromKwh = k => clamp(100 - (k - 0.5) * 28, 5, 100);
+const roomHealth = r => r.live ? Math.min(healthFromKwh(r.kwh), health) : healthFromKwh(r.kwh);
+const stageOf = h => h > 80 ? "bloom" : h > 55 ? "sprout" : h > 30 ? "droopy" : "wilted";
+
+/* ========= Doodle plant (sways, hops, blinks) ========= */
+function plantSVG(h){
+  const st = stageOf(h);
+  const leaf = { bloom:"#a9d08e", sprout:"#a9d08e", droopy:"#cdd68e", wilted:"#c7aa6c" }[st];
+  const rot  = { bloom:0, sprout:0, droopy:32, wilted:58 }[st];
+  const amp  = { bloom:5, sprout:4.5, droopy:3, wilted:1.5 }[st];
+  const dur  = { bloom:2.2, sprout:2.5, droopy:3.2, wilted:4 }[st];
+  const stem = st === "wilted" ? "M60 92 C 60 74, 63 64, 70 61" : st === "bloom" ? "M60 92 L60 34" : "M60 92 L60 58";
+  const top  = st === "wilted" ? [70,61] : st === "bloom" ? [60,64] : [60,58];
+  const mouth = h > 55 ? "M55 131 Q60 136 65 131" : h > 30 ? "M55 133 L65 133" : "M55 135 Q60 129 65 135";
+  const py = h > 30 ? 0 : 1.6;                 // sad plants look down
+  const blink = rnd(0, 4.2);
+  const flower = st !== "bloom" ? "" : `<g transform="translate(60 28)">
+      ${[[0,-8],[8,-2],[5,7],[-5,7],[-8,-2]].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="6.5" fill="#f7b6c8"/>`).join("")}
+      <circle r="4.5" fill="#ffd65a"/></g>`;
+  return `<svg class="plant" viewBox="0 0 120 152" aria-hidden="true">
+   <g class="hop" style="animation-delay:-${rnd(0,3.4)}s">
+    <g filter="url(#rough)" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <g class="sway" style="--a:${amp}deg;--dur:${dur}s;animation-delay:-${rnd(0,dur)}s">
+        <path d="${stem}" fill="none" stroke-width="3.2"/>
+        <g transform="translate(${top[0]} ${top[1]}) scale(1.38)">
+          <path vector-effect="non-scaling-stroke" transform="rotate(${-rot})" d="M0 0 C -15 -19, -36 -14, -39 0 C -26 12, -9 10, 0 0 Z" fill="${leaf}"/>
+          <path vector-effect="non-scaling-stroke" transform="rotate(${rot})"  d="M0 0 C 15 -19, 36 -14, 39 0 C 26 12, 9 10, 0 0 Z" fill="${leaf}"/>
+          <path vector-effect="non-scaling-stroke" transform="rotate(${-rot})" d="M-6 -2 Q -18 -6, -28 -2" fill="none" stroke-width="1.6" opacity=".55"/>
+          <path vector-effect="non-scaling-stroke" transform="rotate(${rot})"  d="M6 -2 Q 18 -6, 28 -2" fill="none" stroke-width="1.6" opacity=".55"/>
+        </g>
+        ${flower}
+      </g>
+      <path d="M32 98 H88 L83 150 H37 Z" fill="#c99a7c"/>
+      <path d="M27 88 H93 V100 H27 Z" fill="#d4a688"/>
+    </g>
+    ${[50, 70].map(x => `<g class="eye" style="animation-delay:-${blink}s">
+      <circle cx="${x}" cy="118" r="7" fill="#fff" stroke="${INK}" stroke-width="2.2"/>
+      <g class="look"><circle cx="${x}" cy="${119 + py}" r="3.6" fill="${INK}"/><circle cx="${x + 1.4}" cy="${117.3 + py}" r="1.3" fill="#fff"/></g>
+    </g>`).join("")}
+    <path d="${mouth}" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>
+    ${h > 55 ? '<ellipse cx="42" cy="129" rx="4.2" ry="2.5" fill="#f2a7a0" opacity=".8"/><ellipse cx="78" cy="129" rx="4.2" ry="2.5" fill="#f2a7a0" opacity=".8"/>' : ""}
+   </g>
+  </svg>`;
+}
+
+function bulbSVG(on){
+  return `<g filter="url(#rough)" stroke="${INK}" stroke-width="2.2" stroke-linecap="round">
+    ${on ? '<g stroke="#f5b942"><path d="M20 2 V-2"/><path d="M5 9 L2 6"/><path d="M35 9 L38 6"/><path d="M0 22 H-3"/><path d="M40 22 H43"/></g>' : ""}
+    <path d="M20 6 C 8 6, 4 18, 10 26 C 13 30, 14 33, 14 37 H26 C26 33, 27 30, 30 26 C36 18, 32 6, 20 6 Z" fill="${on ? "#ffe48a" : "#e4e4e4"}"/>
+    <path d="M14 41 H26 M15 45 H25" /><path d="M17 49 H23"/>
+  </g>`;
+}
+
+/* ========= Garden render ========= */
+let gardenKey = "", leaderId = null, revealing = false;
+function renderGarden(){
+  const sorted = rooms().sort((a,b) => a.kwh - b.kwh);
+  const key = sorted.map(r => r.id + stageOf(roomHealth(r))).join("|");
+  if (key !== gardenKey && !revealing){
+    gardenKey = key;
+    const order = [3,1,0,2,4];               // 4th, 2nd, 1st, 3rd, 5th (left → right)
+    const label = ["1st","2nd","3rd","4th","5th"];
+    $("stage").innerHTML = order.filter(i => sorted[i]).map(i => {
+      const r = sorted[i], podium = i < 3;
+      return `<button class="slot ${podium ? "" : "side"}" data-id="${r.id}" data-rank="${i+1}" data-name="${r.name}" aria-label="${r.name}, ${label[i]} place">
+        ${i === 0 ? `<span class="crown">${icon("crown")}</span>` : ""}
+        <div class="tag">${podium ? "" : label[i] + " · "}${r.name}${r.live ? '<span class="live-pill">LIVE</span>' : ""}</div>
+        <div class="kwh" data-kwh="${r.id}">${r.kwh.toFixed(2)} kWh</div>
+        ${plantSVG(roomHealth(r))}
+        ${podium ? `<div class="block b${i+1}">${i+1}</div>` : ""}
+      </button>`;
+    }).join("");
+  }
+  sorted.forEach(r => { const e = document.querySelector(`[data-kwh="${r.id}"]`); if (e) e.textContent = r.kwh.toFixed(2) + " kWh"; });
+
+  // someone new took 1st place → little party
+  if (leaderId && sorted[0].id !== leaderId && !revealing){
+    const w = document.querySelector('.slot[data-rank="1"]');
+    if (w){ w.classList.add("winner"); burstFrom(w, 120); }
+    sfx.fanfare(); sfx.sparkle();
+    flash(`${icon("crown")}new leader: ${sorted[0].name}!`, 2200, true);
+  }
+  leaderId = sorted[0].id;
+}
+$("stage").addEventListener("click", e => {
+  const b = e.target.closest(".slot");
+  if (b){ sfx.click(); location.hash = "room-" + b.dataset.id; }
+});
+
+/* ========= Winner reveal (press W) ========= */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function announce(html, low = false){ const a = $("announce"); if (html){ a.innerHTML = html; a.classList.toggle("low", low); a.classList.add("show"); } else a.classList.remove("show"); }
+async function flash(html, ms, low = false){ announce(html, low); await sleep(ms); announce(null); }
+const slotOf = rank => document.querySelector(`.slot[data-rank="${rank}"]`);
+const pop = (rank, pitch) => { const e = slotOf(rank); if (e){ e.classList.remove("hide"); sfx.pop(pitch); } };
+
+async function reveal(){
+  if (revealing || route()) return;
+  gardenKey = ""; renderGarden(); revealing = true;
+  document.querySelectorAll(".slot").forEach(s => { s.classList.add("hide"); s.classList.remove("winner"); });
+  if (music.on && !sfx.muted) music.level(.2);
+  sfx.whoosh();
+  await sleep(400);
+  sfx.pop(1.2);
+  await flash(`${icon("sprout")}which room wasted the least this week?`, 2000);
+  pop(5, .7); await sleep(380); pop(4, .8); await sleep(900);
+  pop(3, 1.0); await sleep(1100);
+  pop(2, 1.25); await sleep(1100);
+  sfx.drumroll(1.5);
+  await flash(`${icon("drum", "shake")}drumroll…`, 1500);
+  const w = slotOf(1);
+  pop(1, 1.6);
+  if (w){
+    w.classList.add("winner");
+    await sleep(200);
+    sfx.cymbal(); sfx.fanfare(); sfx.sparkle();
+    burstFrom(w, 260);
+    setTimeout(() => { confetti(innerWidth * .15, innerHeight * .9, 110, -1); confetti(innerWidth * .85, innerHeight * .9, 110, 1); }, 500);
+    await flash(`${icon("trophy")}${w.dataset.name} wins!`, 3600, true);
+  }
+  if (music.on && !sfx.muted) music.level(1, 1.2);
+  revealing = false;
+}
+
+/* ========= Confetti (paper strips + little leaves) ========= */
+const COLORS = ["#a9d08e", "#7cc36b", "#f7b6c8", "#ffd65a", "#a9cdee", "#f2a7a0", "#c99a7c"];
+let parts = [], confettiRunning = false;
+function burstFrom(el, n){ const b = el.getBoundingClientRect(); confetti(b.left + b.width/2, b.top + b.height*.4, n, 0); }
+function confetti(x, y, n, dir){
+  for (let i = 0; i < n; i++){
+    const spread = dir === 0 ? (Math.random() - .5) * 18 : dir * (3 + Math.random() * 9);
+    parts.push({ x, y, vx: spread, vy: -8 - Math.random() * 13, size: 6 + Math.random() * 7,
+                 rot: Math.random() * 6, vr: (Math.random() - .5) * .35, life: 0,
+                 color: COLORS[(Math.random() * COLORS.length) | 0], leaf: Math.random() < .35 });
+  }
+  if (!confettiRunning){ confettiRunning = true; requestAnimationFrame(drawConfetti); }
+}
+function drawConfetti(){
+  const c = $("confetti"), g = c.getContext("2d");
+  if (c.width !== innerWidth || c.height !== innerHeight){ c.width = innerWidth; c.height = innerHeight; }
+  g.clearRect(0, 0, c.width, c.height);
+  parts = parts.filter(p => p.life < 260 && p.y < c.height + 40);
+  for (const p of parts){
+    p.vy += .32; p.vx *= .985; p.x += p.vx + Math.sin(p.life / 9) * .8; p.y += p.vy; p.rot += p.vr; p.life++;
+    g.save(); g.translate(p.x, p.y); g.rotate(p.rot);
+    g.globalAlpha = Math.max(0, 1 - p.life / 260); g.fillStyle = p.color;
+    if (p.leaf){ g.beginPath(); g.ellipse(0, 0, p.size, p.size * .45, 0, 0, Math.PI * 2); g.fill(); }
+    else g.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+    g.restore();
+  }
+  if (parts.length) requestAnimationFrame(drawConfetti); else { confettiRunning = false; g.clearRect(0, 0, c.width, c.height); }
+}
+
+/* ========= Room render ========= */
+let lastPlantStage = "";
+function renderRoom(id){
+  const r = rooms().find(x => x.id === id) || rooms()[0];
+  const live = !!r.live;
+  const d = live ? S : { lights:false, motion:false, idle:0, warning:false, relayCut:false, log:SAMPLE_LOG };
+  const h = roomHealth(r);
+
+  $("rName").textContent = live ? "Our Room" : r.name;
+  document.querySelector(".kicker").textContent = live ? `Leaf it Off · ${r.name}` : "Leaf it Off";
+  $("sKwh").textContent  = r.kwh.toFixed(2);
+  $("sCost").textContent = "$" + (r.kwh * CFG.PRICE).toFixed(2);
+  $("sCo2").textContent  = (r.kwh * CFG.CO2).toFixed(2);
+
+  const ps = stageOf(h) + id;
+  if (ps !== lastPlantStage){ $("roomPlant").innerHTML = plantSVG(h); lastPlantStage = ps; }
+
+  const emptyLit = d.lights && !d.motion && d.idle > 0;
+  $("iLights").innerHTML = icon(d.lights ? "lights_on" : "lights_off", d.warning ? "shake" : "");
+  $("iMotion").innerHTML = icon(d.motion ? "motion" : "still");
+  $("iPower").innerHTML  = icon(d.relayCut ? "cut" : "power_on");
+  $("lLights").textContent = d.lights ? "lights on" : "lights off";
+  $("lLights").className = "line" + (d.warning ? " bad" : "");
+  $("lMotion").textContent = d.motion ? "motion" : "no motion";
+  $("lPower").textContent = d.relayCut ? "power cut" : "power on";
+  $("lPower").className = "line" + (d.relayCut ? " bad" : "");
+
+  const note = $("lNote");
+  if (d.warning)        { note.innerHTML = `${icon("warn")} wasting energy! buzzer is going off`; note.className = "note bad"; }
+  else if (d.relayCut)  { note.textContent = "power cut automatically, waste stopped"; note.className = "note"; }
+  else if (emptyLit)    { note.textContent = `empty with lights on for ${fmt(d.idle)} · warning at ${fmt(CFG.IDLE_LIMIT)}`; note.className = "note"; }
+  else                  { note.textContent = ""; }
+
+  $("bubble").textContent =
+      !live      ? (h > 80 ? "we're thriving!" : h > 55 ? "doing okay :)" : h > 30 ? "a little thirsty…" : "save me pls")
+    : d.warning  ? "turn off the lights!!"
+    : d.relayCut ? "phew… power's off now"
+    : emptyLit   ? "hello? anyone here?"
+    : d.lights   ? "hi roomies!"
+    : h > 55     ? "thanks for saving energy <3" : "i'm recovering…";
+
+  $("log").innerHTML = (d.log.length ? d.log : [{ time:"—", kind:"sprout", msg:"nothing yet" }]).slice(0, 10)
+    .map(e => { const msg = noEmoji(e.msg); return `<li><span class="t">${e.time}</span>${icon(e.kind || guessKind(msg))}<span>${msg}</span></li>`; }).join("");
+  $("demoControls").hidden = !live;
+  $("demoControls").style.opacity = mode === "demo" ? 1 : .5;
+}
+$("demoControls").innerHTML = `
+  <button onclick="demo.toggleLights()">${icon("lights_on")} lights (L)</button>
+  <button onclick="demo.wave()">${icon("motion")} motion (M)</button>
+  <button onclick="demo.reset()">${icon("reset")} reset (R)</button>
+  <button onclick="switchMode()">${icon("swap")} live / demo (D)</button>
+  <small>demo buttons only work in demo mode · S = all sound · B = music</small>`;
+$("groundLabel").innerHTML = `${icon("sprout")} this week's garden`;
+
+/* ========= Routing: #  → garden, #room-<id> → room page ========= */
+function route(){ return location.hash.startsWith("#room-") ? location.hash.slice(6) : null; }
+function render(){
+  const id = route();
+  $("garden").hidden = !!id; $("room").hidden = !id; $("roomGround").hidden = !id;
+  id ? renderRoom(id) : renderGarden();
+}
+addEventListener("hashchange", () => { lastPlantStage = ""; gardenKey = ""; scrollTo(0,0); render(); });
+
+function addLog(kind, msg){
+  const time = new Date().toLocaleTimeString([], { hour:"numeric", minute:"2-digit", second:"2-digit" });
+  S.log.unshift({ time, kind, msg });
+}
+
+/* sounds when the room's state changes (works in live and demo mode) */
+let prev = { warning:false, relayCut:false };
+function watchEvents(){
+  if (S.warning && !prev.warning) sfx.alert();
+  if (S.relayCut && !prev.relayCut) sfx.powerDown();
+  prev = { warning:S.warning, relayCut:S.relayCut };
+}
+
+/* plant health: drops while wasting, recovers otherwise */
+setInterval(() => {
+  const wasting = S.lights && !S.motion && S.idle > 0 && !S.relayCut;
+  health = wasting ? Math.max(0, health - (S.warning ? 6 : 2)) : Math.min(100, health + 1.5);
+  watchEvents();
+  render();
+}, 1000);
+
+/* ========= DEMO mode (fake hardware) ========= */
+const demo = {
+  motionLeft: 0,
+  tick(){
+    if (this.motionLeft > 0 && --this.motionLeft === 0) S.motion = false;
+    if (S.lights && !S.motion) S.idle++; else S.idle = 0;
+    if (S.lights && !S.motion && S.idle > 0) S.kwh += CFG.WATTS / 1000 / 3600 * CFG.SPEED;
+    if (S.lights && S.idle >= CFG.IDLE_LIMIT && !S.warning){ S.warning = true; addLog("warn", "Lights on in an empty room, buzzer warning"); }
+    if (S.warning && !S.relayCut && S.idle >= CFG.IDLE_LIMIT + CFG.CUT_AFTER){
+      S.relayCut = true; S.lights = false; S.warning = false; addLog("cut", "Relay cut power to the load");
+    }
+    watchEvents();
+    render();
+  },
+  toggleLights(){
+    if (mode !== "demo") return sfx.click();
+    S.lights = !S.lights; S.idle = 0;
+    if (S.lights) S.relayCut = false; else S.warning = false;
+    S.lights ? sfx.lightOn() : sfx.lightOff();
+    addLog(S.lights ? "lights_on" : "lights_off", S.lights ? "Lights turned on" : "Lights turned off"); render();
+  },
+  wave(){
+    if (mode !== "demo") return sfx.click();
+    const wasCut = S.relayCut;
+    S.motion = true; this.motionLeft = 3; S.idle = 0; S.warning = false; S.relayCut = false;
+    sfx.chime();
+    addLog(wasCut ? "power_on" : "motion", wasCut ? "Someone came back, power restored" : "Motion detected"); render();
+  },
+  reset(){
+    if (mode !== "demo") return sfx.click();
+    S = freshState(); health = 100; sfx.whoosh(); addLog("reset", "Demo reset"); gardenKey = ""; render();
+  }
+};
+
+/* ========= LIVE mode (real data from the Pi) ========= */
+async function poll(){
+  try {
+    const r = await fetch(CFG.API, { cache:"no-store" });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    everConnected = true;
+    Object.assign(S, {
+      lights: !!j.lights, motion: !!j.motion, idle: j.idle_seconds ?? 0,
+      warning: !!j.warning, relayCut: !!j.relay_cut, kwh: j.wasted_kwh ?? S.kwh
+    });
+    if (Array.isArray(j.log)) S.log = j.log;
+    if (Array.isArray(j.leaderboard)) S.leaderboard = j.leaderboard;
+    if (j.room_name) CFG.LIVE_NAME = j.room_name;
+    if (j.idle_limit) CFG.IDLE_LIMIT = j.idle_limit;
+    setBadge("live", "● live from sensors");
+    render();
+  } catch (e) {
+    if (!everConnected){ startMode("demo", "demo (no Pi found)"); return; }
+    setBadge("off", "disconnected, retrying");
+  }
+}
+
+function setBadge(cls, text){ const b = $("modeBadge"); b.className = "badge " + cls; b.textContent = text; }
+function startMode(m, label){
+  clearInterval(pollTimer); clearInterval(demoTimer); mode = m;
+  if (m === "live"){ setBadge("", "connecting…"); everConnected = false; poll(); pollTimer = setInterval(poll, CFG.POLL_MS); }
+  else { setBadge("demo", label || "demo mode"); demoTimer = setInterval(() => demo.tick(), 1000); }
+  render();
+}
+function switchMode(){ sfx.click(); startMode(mode === "live" ? "demo" : "live"); }
+
+addEventListener("keydown", e => {
+  if (e.repeat) return;
+  const k = e.key.toLowerCase();
+  if (k === "l") demo.toggleLights();
+  if (k === "m") demo.wave();
+  if (k === "r") demo.reset();
+  if (k === "d") switchMode();
+  if (k === "w") reveal();
+  if (k === "s"){ sfx.muted = !sfx.muted; music.level(sfx.muted || !music.on ? 0 : 1); if (!sfx.muted){ music.start(); sfx.click(); } }
+  if (k === "b") music.toggle();
+});
+/* browsers only allow sound after the first click/keypress — this unlocks it */
+addEventListener("pointerdown", unlockSound);
+addEventListener("keydown", unlockSound);
+
+startMode(new URLSearchParams(location.search).has("demo") ? "demo" : "live");
+</script>
+</body>
+</html>

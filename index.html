@@ -8,8 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#2f2f2f; --muted:#8c8c8c; --ground:#3d5f3a; --block:#f4e7d4;
-    --red:#d9483b; --sky:#ffffff;
+    --ink:#2f2f2f; --muted:#8c8c8c; --ground:#4f7861; --block:#f4e7d4;
+    --red:#d9483b; --sky:#f4f9fd;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
@@ -19,17 +19,37 @@
   .ico{width:1.15em;height:1.15em;vertical-align:-.22em;display:inline-block;overflow:visible}
 
   /* ---- clouds: drift slowly from side to side, forever ---- */
-  .cloud{position:absolute;z-index:0;pointer-events:none;width:clamp(80px,14vw,140px);
+  .cloud{position:absolute;z-index:0;pointer-events:none;width:clamp(110px,17vw,210px);
          animation:cross var(--t) ease-in-out infinite alternate}
-  .cloud.l{left:1%;top:84px;--dx:min(10vw,140px);--t:26s}
-  .cloud.r{right:1%;top:40px;--dx:calc(-1 * min(10vw,140px));--t:32s;animation-delay:-11s}
-  .cloud.s{right:3%;top:215px;width:clamp(48px,7vw,78px);--dx:calc(-1 * min(12vw,170px));--t:38s;animation-delay:-20s;opacity:.85}
+  .cloud.l{left:1%;top:80px;--dx:min(6vw,90px);--t:24s}
+  .cloud.r{right:1%;top:34px;--dx:calc(-1 * min(6vw,90px));--t:30s;animation-delay:-11s}
+  .cloud.s{right:3%;top:205px;width:clamp(68px,9.5vw,125px);--dx:calc(-1 * min(9vw,130px));--t:38s;animation-delay:-20s;opacity:.85}
   @keyframes cross{from{transform:translateX(0)}to{transform:translateX(var(--dx))}}
   .title,.sub,.sub2,.stage,.kicker,.room-title,.stats,.scene{position:relative;z-index:1}
 
   /* ---- plant idle animation: sway, little hop, blink ---- */
   .plant .sway{transform-box:view-box;transform-origin:60px 92px;animation:sway var(--dur,2.6s) ease-in-out infinite alternate}
   @keyframes sway{from{transform:rotate(calc(-1 * var(--a,4deg)))}to{transform:rotate(var(--a,4deg))}}
+  /* ---- plants built from Raisa's drawings (stacked PNG layers) ---- */
+  .img-plant{position:relative;overflow:visible;z-index:2;margin-bottom:calc(-1 * var(--sink,12%))}
+  .img-plant .tilt{position:absolute;inset:0;transform-origin:50% 100%}
+  .plant-box .img-plant{--sink:10%}           /* room page: sit down into the ground */
+  .img-plant .lw{position:absolute;inset:0}
+  .img-plant .cv{position:absolute}
+  .img-plant .hopw,.img-plant .eyesw,.img-plant .lookw{position:absolute;inset:0}
+  .img-plant .pl{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;user-select:none;-webkit-user-drag:none}
+  .img-plant .hopw{transform-origin:var(--oPot,50% 100%);animation:hop 3.4s ease-in-out infinite}
+  .img-plant .leafL{transform-origin:var(--oLL,45% 55%);animation:flapL var(--fd,2.4s) ease-in-out infinite alternate}
+  .img-plant .leafR{transform-origin:var(--oLR,55% 55%);animation:flapR var(--fd,2.4s) ease-in-out infinite alternate}
+  .img-plant .sproutL{transform-origin:var(--oSp,50% 50%);animation:sproutS 2s ease-in-out infinite alternate}
+  .img-plant .eyesw{transform-origin:var(--oEye,50% 65%);animation:blink 4.2s infinite}
+  .img-plant .lookw{animation:lookI 6s ease-in-out infinite alternate}
+  .look-meh,.look-sad{--fd:3.6s;--amp:.5}
+  @keyframes flapL{from{transform:rotate(calc(-6deg * var(--amp,1)))}to{transform:rotate(calc(3deg * var(--amp,1)))}}
+  @keyframes flapR{from{transform:rotate(calc(6deg * var(--amp,1)))}to{transform:rotate(calc(-3deg * var(--amp,1)))}}
+  @keyframes sproutS{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+  @keyframes lookI{0%,30%{transform:translateX(-.9%)}70%,100%{transform:translateX(.9%) translateY(.3%)}}
+  img.cloud{height:auto}
   .plant .hop{transform-box:view-box;transform-origin:60px 150px;animation:hop 3.4s ease-in-out infinite}
   @keyframes hop{0%,76%,100%{transform:none}82%{transform:scale(1.05,.93)}88%{transform:translateY(-6px) scale(.97,1.05)}94%{transform:scale(1.02,.98)}}
   .plant{overflow:visible}
@@ -46,14 +66,22 @@
   .slot{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;font:inherit;color:inherit;
         transition:opacity .45s, transform .6s cubic-bezier(.3,1.6,.5,1)}
   .slot .plant{width:clamp(70px,12.5vw,138px);display:block;transition:transform .2s}
+  .slot[data-rank="1"] .plant{width:clamp(80px,14.5vw,160px)}   /* sizes go biggest → smallest from 1st to 5th */
+  .slot[data-rank="2"] .plant{width:clamp(74px,13.2vw,146px)}
+  .slot[data-rank="3"] .plant{width:clamp(68px,12vw,132px)}
+  .slot[data-rank="4"] .plant{width:clamp(62px,11vw,121px)}
+  .slot[data-rank="5"] .plant{width:clamp(57px,10vw,110px)}
   .slot:hover .plant,.slot:focus-visible .plant{transform:translateY(-6px) rotate(-3deg)}
   .slot.side{margin:0 clamp(0px,2vw,24px)}
   .slot.hide{opacity:0;transform:translateY(70px) scale(.55)}
   .tag{font-weight:700;font-size:clamp(11px,1.6vw,16px);white-space:nowrap;line-height:1.2}
   .kwh{font-size:clamp(10px,1.3vw,13px);color:var(--muted);font-weight:600;margin-bottom:6px}
   .live-pill{display:inline-block;font-size:10px;background:#7cc36b;color:#fff;border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:middle;font-weight:800}
-  .block{width:clamp(78px,14vw,150px);background:var(--block);border:3px solid var(--ink);border-bottom:0;border-radius:10px 10px 0 0;
-         display:flex;justify-content:center;padding-top:6px;font-weight:800;font-size:clamp(22px,4vw,42px)}
+  .block{position:relative;width:clamp(84px,14.5vw,156px);display:flex;justify-content:center;padding-top:10px;
+         font-weight:800;font-size:clamp(22px,4vw,42px);margin-bottom:-6px}
+  .block svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .block span{position:relative;z-index:1}
+  .block.p1 span{color:#a8842c} .block.p2 span{color:#858d99} .block.p3 span{color:#a26c45}
   .b1{height:clamp(80px,13vw,140px)} .b2{height:clamp(56px,9vw,100px)} .b3{height:clamp(38px,6vw,68px)}
   .crown{display:block;font-size:clamp(26px,3.6vw,40px);line-height:1;animation:bob 1s ease-in-out infinite alternate}
   @keyframes bob{to{transform:translateY(-5px) rotate(-7deg)}}
@@ -61,6 +89,9 @@
   @keyframes jump{50%{transform:translateY(-20px) rotate(4deg)}}
   .ground{background:var(--ground);height:clamp(70px,13vh,130px);color:#fff;display:flex;justify-content:center;align-items:center;gap:8px;font-weight:600}
 
+  .ground,.room-ground{position:relative}
+  .ground::before,.room-ground::before{content:"";position:absolute;left:0;right:0;top:-15px;height:16px;
+      background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 24' preserveAspectRatio='none'%3E%3Cpath d='M0 14 C 40 8, 80 9, 120 12 S 200 17, 250 12 S 330 6, 380 10 S 460 16, 510 11 S 570 8, 600 14 V24 H0Z' fill='%234f7861'/%3E%3C/svg%3E") repeat-x;background-size:600px 16px;pointer-events:none}
   .announce{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%) scale(.6);opacity:0;background:#fff;border:3px solid var(--ink);border-radius:20px;
             padding:14px 28px;font-weight:800;font-size:clamp(22px,4vw,42px);z-index:20;box-shadow:5px 5px 0 var(--ink);
             transition:opacity .3s, transform .45s cubic-bezier(.3,1.6,.5,1);pointer-events:none;white-space:nowrap}
@@ -73,7 +104,7 @@
   #confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:15}
 
   /* ===== ROOM PAGE ===== */
-  #room{min-height:auto}
+  #room{min-height:auto;overflow-x:clip;overflow-y:visible;z-index:3}
   .back{position:absolute;top:18px;left:20px;font-weight:700;text-decoration:none;color:var(--ink);font-size:15px;z-index:2}
   .back:hover{text-decoration:underline}
   .kicker{text-align:center;font-weight:700;font-size:clamp(20px,3vw,28px);margin-top:46px}
@@ -123,6 +154,20 @@
 <!-- shared doodle filter: makes clean SVG lines look hand-drawn -->
 <svg width="0" height="0" style="position:absolute">
   <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+  <filter id="paint" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7" result="w"/>
+    <feDisplacementMap in="SourceGraphic" in2="w" scale="3" result="d"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="2" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .14 0" result="g"/>
+    <feComposite in="g" in2="d" operator="in" result="gi"/>
+    <feMerge><feMergeNode in="d"/><feMergeNode in="gi"/></feMerge>
+  </filter>
+  <filter id="grain" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .12 0" result="g"/>
+    <feComposite in="g" in2="SourceGraphic" operator="in" result="gi"/>
+    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="gi"/></feMerge>
+  </filter>
   <symbol id="cloud" viewBox="0 0 110 70">
     <path filter="url(#rough)" d="M20 60 C 5 60, 4 40, 22 38 C 21 20, 47 15, 55 30 C 62 13, 93 17, 90 38 C 108 37, 109 60, 92 60 Z"
           fill="#a9cdee" stroke="#86b6e2" stroke-width="2.5"/>
@@ -207,22 +252,31 @@ const INK = "#3a2e28";
 const BULB = f => `<path d="M16 4 C9 4 7 11 10 16 C12 19 12.5 20.5 12.5 23 H19.5 C19.5 20.5 20 19 22 16 C25 11 23 4 16 4 Z" fill="${f}"/><path d="M12.5 26 H19.5 M14 29 H18"/>`;
 const PLUG = `<path d="M10 9 H22 V17 C22 21 19 23 16 23 C13 23 10 21 10 17 Z" fill="#a9cdee"/><path d="M13 9 V4 M19 9 V4 M16 23 V26 C16 29 21 29 24 29" fill="none"/>`;
 const ICONS = {
-  crown:  `<path d="M5 24 L7 10 L12.5 16.5 L16 7 L19.5 16.5 L25 10 L27 24 Z" fill="#ffd65a"/><path d="M5 24 H27 V28 H5 Z" fill="#f5b942"/><circle cx="16" cy="6" r="2" fill="#f7b6c8"/>`,
+  crown:  `<path d="M5 24 L7 10 L12.5 16.5 L16 7 L19.5 16.5 L25 10 L27 24 Z" fill="#ffd65a"/><path d="M5 24 H27 V28 H5 Z" fill="#f5b942"/>`,
   trophy: `<path d="M9 8 C3 8 4 16 10 15 M23 8 C29 8 28 16 22 15" fill="none"/><path d="M9 5 H23 V12 C23 17.5 19.5 21 16 21 C12.5 21 9 17.5 9 12 Z" fill="#ffd65a"/><path d="M14 21 H18 V25 H14 Z" fill="#f5b942"/><path d="M10 25 H22 V29 H10 Z" fill="#c99a7c"/>`,
-  drum:   `<path d="M9 3 L15 10 M23 3 L17 10"/><path d="M5 12 V23 C5 27 27 27 27 23 V12" fill="#f7b6c8"/><ellipse cx="16" cy="12" rx="11" ry="4" fill="#fff"/><path d="M8 16 L12 23 L16 16 L20 23 L24 16" fill="none"/>`,
+  drum:   `<path d="M9 3 L15 10 M23 3 L17 10"/><path d="M5 12 V23 C5 27 27 27 27 23 V12" fill="#f7b6c8"/><ellipse cx="16" cy="12" rx="11" ry="4" fill="#f2e6dc"/><path d="M8 16 L12 23 L16 16 L20 23 L24 16" fill="none"/>`,
   sprout: `<path d="M16 29 V15" fill="none"/><path d="M16 16 C 12 9, 5 10, 4 15 C 8 19, 13 19, 16 16 Z" fill="#a9d08e"/><path d="M16 14 C 20 7, 27 8, 28 13 C 24 17, 19 17, 16 14 Z" fill="#a9d08e"/>`,
   heart:  `<path d="M16 27 C 4 19, 3 11, 9 8 C 13 6, 16 10, 16 11 C 16 10, 19 6, 23 8 C 29 11, 28 19, 16 27 Z" fill="#f2a7a0"/>`,
   warn:   `<path d="M16 4 L29 27 H3 Z" fill="#ffd65a"/><path d="M16 12 V19"/><circle cx="16" cy="23" r="1.4" fill="${INK}"/>`,
-  lights_on:  BULB("#ffe48a") + `<path d="M16 0 V1 M4 6 L5.5 7.5 M28 6 L26.5 7.5" stroke="#f5b942"/>`,
-  lights_off: BULB("#e4e4e4"),
-  still:  `<circle cx="16" cy="6" r="3.2" fill="#e4e4e4"/><path d="M16 10 V20 M16 20 L12 29 M16 20 L20 29 M16 13 L11 18 M16 13 L21 18" fill="none" stroke-dasharray="2.5 3"/><path d="M23 6 L27 6 L23 11 L27 11" fill="none" stroke="#86b6e2"/>`,
+  lights_on:  BULB("#f8d860") + `<path d="M16 0 V1 M4 6 L5.5 7.5 M28 6 L26.5 7.5" stroke="#f5b942"/>`,
+  lights_off: BULB("#cfd4da"),
+  still:  `<circle cx="16" cy="6" r="3.2" fill="#cfd4da"/><path d="M16 10 V20 M16 20 L12 29 M16 20 L20 29 M16 13 L11 18 M16 13 L21 18" fill="none" stroke-dasharray="2.5 3"/><path d="M23 6 L27 6 L23 11 L27 11" fill="none" stroke="#86b6e2"/>`,
   motion: `<circle cx="17" cy="6" r="3.2" fill="#f7b6c8"/><path d="M16 10 L13 19 L18 23 L18 29 M13 19 L8 27 M14 13 L9 16 M15 13 L21 16" fill="none"/><path d="M23 9 H29 M24 14 H30 M23 19 H28" stroke="#86b6e2"/>`,
   power_on: PLUG,
   cut:    PLUG + `<path d="M4 28 L28 4" stroke="#d9483b" stroke-width="3"/>`,
   reset:  `<path d="M25 16 A9 9 0 1 1 21.5 8.8" fill="none"/><path d="M23 3 L22 9.5 L15.5 9" fill="none"/>`,
   swap:   `<path d="M5 11 H26 M21 6 L26 11 L21 16 M27 21 H6 M11 16 L6 21 L11 26" fill="none"/>`,
 };
-const icon = (name, cls = "") => `<svg class="ico ${cls}" viewBox="0 0 32 32" aria-hidden="true"><g filter="url(#rough)" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ICONS.sprout}</g></svg>`;
+const SOFT_LINE = "#8a7468";                       // soft warm brown for plain lines instead of black
+function shade(hex, f){                            // f < 0 darkens
+  const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f));
+  return "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
+}
+const softIcon = svg => svg
+  .replaceAll(INK, "#6e5a50")
+  .replace(/fill="#fff"/g, 'fill="#fbe3ea"')                                   // white parts would vanish without an outline
+  .replace(/fill="(#[0-9a-fA-F]{3,6})"(?![^>]*stroke=)/g, (m, f) => `fill="${f}" stroke="none"`);
+const icon = (name, cls = "") => `<svg class="ico ${cls}" viewBox="0 0 32 32" aria-hidden="true"><g filter="url(#paint)" stroke="${SOFT_LINE}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">${softIcon(ICONS[name] || ICONS.sprout)}</g></svg>`;
 const noEmoji = t => String(t).replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{2702}\u{21BA}]/gu, "").trim();
 function guessKind(msg){
   const m = msg.toLowerCase();
@@ -243,7 +297,7 @@ function ac(){
   return AC;
 }
 function tone(freq, dur, { type = "sine", vol = .2, when = 0, slide = 0 } = {}){
-  if (sfx.muted) return;
+  if (sfx.muted || !AC) return;       // no sound until the first click/keypress
   const c = ac(), t = c.currentTime + when, o = c.createOscillator(), g = c.createGain();
   o.type = type; o.frequency.setValueAtTime(freq, t);
   if (slide) o.frequency.exponentialRampToValueAtTime(freq * slide, t + dur);
@@ -255,7 +309,7 @@ function noiseSrc(c){
   const s = c.createBufferSource(); s.buffer = NB; s.loop = true; return s;
 }
 function noise(dur, { vol = .1, when = 0, freq = 1000, q = 1, sweep = 0, attack = .01 } = {}){
-  if (sfx.muted) return;
+  if (sfx.muted || !AC) return;       // no sound until the first click/keypress
   const c = ac(), t = c.currentTime + when;
   const s = noiseSrc(c), f = c.createBiquadFilter(), g = c.createGain();
   f.type = "bandpass"; f.Q.value = q; f.frequency.setValueAtTime(freq, t);
@@ -270,7 +324,7 @@ const sfx = {
   pop(p = 1){ tone(260 * p, .15, { vol:.28, slide:2.6 }); tone(520 * p, .08, { type:"triangle", vol:.06, when:.03, slide:1.8 }); },
   whoosh(){ noise(.6, { vol:.12, freq:500, q:.7, sweep:4, attack:.2 }); },
   drumroll(d = 1.5){
-    if (sfx.muted) return;
+    if (sfx.muted || !AC) return;
     const c = ac(), t = c.currentTime;
     // snare roll: noise chopped by a fast, speeding-up pulse, getting louder
     const sn = noiseSrc(c), bp = c.createBiquadFilter(), chop = c.createGain(), env = c.createGain();
@@ -366,6 +420,106 @@ const roomHealth = r => r.live ? Math.min(healthFromKwh(r.kwh), health) : health
 const stageOf = h => h > 80 ? "bloom" : h > 55 ? "sprout" : h > 30 ? "droopy" : "wilted";
 
 /* ========= Doodle plant (sways, hops, blinks) ========= */
+/* ========= Raisa's drawings =========
+   All PNGs live in the folder below, next to index.html, and are all the same canvas size.
+   If the folder is missing, the page falls back to the built-in doodle plant. */
+const IMG_DIR = "leafiton img";
+const IMG_EXT = ".png";
+const imgURL = n => encodeURI(`${IMG_DIR}/${n}${IMG_EXT}`);
+const LOOKS = {   // which drawings each podium place uses
+  top:  { leaves:["leftleaf","rightleaf"],     sprout:true,  eyes:"eyeball",    pupil:"pupil",    mouth:"happymouth" },  // 1st
+  good: { leaves:["leftleaf","rightleaf"],     sprout:false, eyes:"eyeball",    pupil:"pupil",    mouth:"happymouth" },  // 2nd, 3rd
+  meh:  { leaves:["leftyellow","rightyellow"], sprout:false, eyes:"eyeballmeh", pupil:"pupilmeh", mouth:"sadmouth"   },  // 4th
+  sad:  { leaves:["leftyellow","rightyellow"], sprout:false, eyes:"tear",       pupil:"pupil",    mouth:"sadmouth"   },  // 5th
+};
+const ALL_PARTS = ["pot","leftleaf","rightleaf","leftyellow","rightyellow","sprout","eyeball","eyeballmeh","tear","pupil","pupilmeh","happymouth","sadmouth"];
+const ART = { ok:false, ratio:"600 / 760", crop:null };
+const LOOK_H = { top:95, good:70, meh:45, sad:15 };
+
+function lookOf(r, rank){
+  if (r.live){                                   // the real room reacts right away while wasting
+    if (S.warning) return "sad";
+    if (S.lights && !S.motion && S.idle > 0 && !S.relayCut) return "meh";
+  }
+  return rank === 1 ? "top" : rank <= 3 ? "good" : rank === 4 ? "meh" : "sad";
+}
+function plantFor(look, rank = 1){ return ART.ok ? plantIMG(look, rank) : plantSVG(LOOK_H[look]); }
+const LEAN = 1.5;                                      // degrees every plant leans right (to straighten the drawn pot); 0 = none
+const TILT = { 1:LEAN, 2:LEAN, 3:LEAN, 4:LEAN, 5:LEAN };
+const LEAF_MODE = { 2:"swap", 3:"lefty" };            // 2nd: leaves swapped sides · 3rd: two smaller left leaves, one mirrored
+function leavesHTML(L, rank){
+  const [lft, rgt] = L.leaves;
+  const img = (n, cls) => `<img class="pl ${cls}" src="${imgURL(n)}" alt="" draggable="false">`;
+  const wrap = (origin, tf, inner) => `<div class="lw" style="transform-origin:var(${origin});transform:${tf}">${inner}</div>`;
+  switch (LEAF_MODE[rank]){
+    case "swap":  return wrap("--oLL", "scaleX(-1)", img(lft, "leafL")) + wrap("--oLR", "scaleX(-1)", img(rgt, "leafR"));
+    case "lefty": return wrap("--oLL", "scale(.8)", img(lft, "leafL")) + wrap("--oLL", "scale(-.8,.8)", img(lft, "leafL"));
+    default:      return img(lft, "leafL") + img(rgt, "leafR");
+  }
+}
+
+function plantIMG(look, rank = 1){
+  const L = LOOKS[look], c = ART.crop;
+  const layer = (n, cls = "") => `<img class="pl ${cls}" src="${imgURL(n)}" alt="" draggable="false">`;
+  // c = the part of the canvas that actually has drawing on it, so the plant isn't tiny with empty margins
+  const cv = c ? `left:${-c.x / c.w * 100}%;top:${-c.y / c.h * 100}%;width:${100 / c.w}%;height:${100 / c.h}%` : "inset:0";
+  return `<div class="plant img-plant look-${look}" style="aspect-ratio:${ART.ratio}">
+    <div class="cv" style="${cv}">
+      <div class="tilt" style="transform:rotate(${TILT[rank] || 0}deg)">
+      <div class="hopw" style="animation-delay:-${rnd(0,3.4)}s">
+        ${leavesHTML(L, rank)}
+        ${L.sprout ? layer("sprout", "sproutL") : ""}
+        ${layer("pot")}
+        <div class="eyesw" style="animation-delay:-${rnd(0,4.2)}s">${layer(L.eyes)}<div class="lookw">${layer(L.pupil)}</div></div>
+        ${layer(L.mouth)}
+      </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* Find where each drawing actually sits on the canvas, to set pivot points (leaves sway from
+   their base, eyes blink around their middle) and crop empty margins. Needs the page to be
+   opened through server.py (http://localhost:5000); from a double-clicked file it uses defaults. */
+function bbox(img){
+  const w = img.naturalWidth, h = img.naturalHeight, c = document.createElement("canvas");
+  c.width = w; c.height = h; const g = c.getContext("2d"); g.drawImage(img, 0, 0);
+  const d = g.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2)
+    if (d[(y * w + x) * 4 + 3] > 20){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return x1 < 0 ? null : { x:x0 / w, y:y0 / h, r:x1 / w, b:y1 / h };
+}
+const loadImg = n => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = imgURL(n); });
+async function loadArt(){
+  const pot = await loadImg("pot");
+  if (!pot) return;                                         // no drawings found → keep doodles
+  ART.ok = true; ART.ratio = `${pot.naturalWidth} / ${pot.naturalHeight}`;
+  document.querySelectorAll("svg.cloud").forEach(el => {     // swap in the drawn clouds
+    const img = document.createElement("img");
+    img.className = el.getAttribute("class"); img.src = imgURL("cloud"); img.alt = "";
+    img.onerror = () => img.replaceWith(el); el.replaceWith(img);
+  });
+  try {
+    const imgs = await Promise.all(ALL_PARTS.map(loadImg)), B = {};
+    ALL_PARTS.forEach((n, i) => { if (imgs[i]) B[n] = bbox(imgs[i]); });
+    const pct = (x, y) => `${(x * 100).toFixed(1)}% ${(y * 100).toFixed(1)}%`, root = document.documentElement.style;
+    if (B.leftleaf)  root.setProperty("--oLL", pct(B.leftleaf.r,  B.leftleaf.b));
+    if (B.rightleaf) root.setProperty("--oLR", pct(B.rightleaf.x, B.rightleaf.b));
+    if (B.sprout)    root.setProperty("--oSp", pct((B.sprout.x + B.sprout.r) / 2, B.sprout.b));
+    if (B.eyeball)   root.setProperty("--oEye", pct(.5, (B.eyeball.y + B.eyeball.b) / 2));
+    if (B.pot)       root.setProperty("--oPot", pct((B.pot.x + B.pot.r) / 2, B.pot.b));
+    const boxes = Object.values(B).filter(Boolean);
+    if (boxes.length){
+      const pad = .04, x = Math.max(0, Math.min(...boxes.map(b => b.x)) - pad), y = Math.max(0, Math.min(...boxes.map(b => b.y)) - pad);
+      const r = Math.min(1, Math.max(...boxes.map(b => b.r)) + pad), b = Math.min(1, B.pot ? B.pot.b + .005 : Math.max(...boxes.map(b => b.b)));
+      ART.crop = { x, y, w:r - x, h:b - y };
+      ART.ratio = `${(r - x) * pot.naturalWidth} / ${(b - y) * pot.naturalHeight}`;
+    }
+  } catch (e) { console.warn("Open through server.py for best results (could not measure drawings):", e.message); }
+  gardenKey = ""; lastPlantStage = ""; render();
+}
+
 function plantSVG(h){
   const st = stageOf(h);
   const leaf = { bloom:"#a9d08e", sprout:"#a9d08e", droopy:"#cdd68e", wilted:"#c7aa6c" }[st];
@@ -414,11 +568,31 @@ function bulbSVG(on){
   </g>`;
 }
 
+/* ========= Podium blocks: soft painted shapes, no outlines ========= */
+const PODIUM = {   // straight edges, just not a perfect rectangle (top a bit wider, sides slightly slanted)
+  1: { base:"#f1dea3", top:"#f8ecc6", d:"M2 3 L98 1.5 L96 104 L9 104 Z" },   // gold
+  2: { base:"#e3e6ea", top:"#f1f3f6", d:"M1 4 L97 2 L99 104 L6 104 Z" },     // silver
+  3: { base:"#ecc9ab", top:"#f6e0cc", d:"M3 2 L99 3.5 L94 104 L4 104 Z" },   // bronze
+};
+function blockHTML(n){
+  const c = PODIUM[n];
+  return `<div class="block b${n} p${n}">
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <defs><clipPath id="podclip${n}"><path d="${c.d}"/></clipPath></defs>
+      <g filter="url(#grain)">
+        <path d="${c.d}" fill="${c.base}"/>
+        <rect x="0" y="0" width="16" height="110" fill="${c.top}" clip-path="url(#podclip${n})"/>
+      </g>
+    </svg>
+    <span>${n}</span>
+  </div>`;
+}
+
 /* ========= Garden render ========= */
 let gardenKey = "", leaderId = null, revealing = false;
 function renderGarden(){
   const sorted = rooms().sort((a,b) => a.kwh - b.kwh);
-  const key = sorted.map(r => r.id + stageOf(roomHealth(r))).join("|");
+  const key = sorted.map((r, i) => r.id + lookOf(r, i + 1)).join("|") + ART.ok + !!ART.crop;
   if (key !== gardenKey && !revealing){
     gardenKey = key;
     const order = [3,1,0,2,4];               // 4th, 2nd, 1st, 3rd, 5th (left → right)
@@ -429,8 +603,8 @@ function renderGarden(){
         ${i === 0 ? `<span class="crown">${icon("crown")}</span>` : ""}
         <div class="tag">${podium ? "" : label[i] + " · "}${r.name}${r.live ? '<span class="live-pill">LIVE</span>' : ""}</div>
         <div class="kwh" data-kwh="${r.id}">${r.kwh.toFixed(2)} kWh</div>
-        ${plantSVG(roomHealth(r))}
-        ${podium ? `<div class="block b${i+1}">${i+1}</div>` : ""}
+        ${plantFor(lookOf(r, i + 1), i + 1)}
+        ${podium ? blockHTML(i + 1) : ""}
       </button>`;
     }).join("");
   }
@@ -528,8 +702,10 @@ function renderRoom(id){
   $("sCost").textContent = "$" + (r.kwh * CFG.PRICE).toFixed(2);
   $("sCo2").textContent  = (r.kwh * CFG.CO2).toFixed(2);
 
-  const ps = stageOf(h) + id;
-  if (ps !== lastPlantStage){ $("roomPlant").innerHTML = plantSVG(h); lastPlantStage = ps; }
+  const rank = rooms().sort((a, b) => a.kwh - b.kwh).findIndex(x => x.id === r.id) + 1;
+  const look = lookOf(r, rank);
+  const ps = look + rank + id + ART.ok + !!ART.crop;
+  if (ps !== lastPlantStage){ $("roomPlant").innerHTML = plantFor(look, rank); lastPlantStage = ps; }
 
   const emptyLit = d.lights && !d.motion && d.idle > 0;
   $("iLights").innerHTML = icon(d.lights ? "lights_on" : "lights_off", d.warning ? "shake" : "");
@@ -680,6 +856,7 @@ addEventListener("pointerdown", unlockSound);
 addEventListener("keydown", unlockSound);
 
 startMode(new URLSearchParams(location.search).has("demo") ? "demo" : "live");
+loadArt();
 </script>
 </body>
 </html>
